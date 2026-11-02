@@ -1,0 +1,147 @@
+/* Shared layout constraints apply to every page, including saved user content. */
+:root { color: var(--text); }
+.main-shell, main, .hero-content, .search, label, fieldset,
+.home-columns > *, .rhythm-grid > *, .city-details > *, .community-grid > *,
+.research-background > *, .city-prayer-topics > article > div,
+.daily-city-focus > div, .feature-banner > div, .notification-row > div,
+.reminder-nudge > div, .research-workspace-link > div {
+  min-width: 0;
+}
+main, .dialog { overflow-wrap: anywhere; }
+.page-heading, .section-heading, .form-actions, .backup-actions,
+.duration-picker, .session-actions, .detail-meta, .prayer-card-meta { flex-wrap: wrap; }
+.page-heading > div { min-width: 0; }
+.primary, .secondary, .text-button { max-width: 100%; }
+.nav-item { overflow-wrap: anywhere; }
+.nav-dot, .day-emblem, .prayer-card-icon { flex-shrink: 0; }
+.form-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.tabs { max-width: 100%; overscroll-behavior-x: contain; }
+.tabs button { flex-shrink: 0; }
+.search { flex-direction: row; align-items: center; }
+.search-row { align-items: flex-start; }
+.search-row .search { margin-bottom: 0; }
+.search input:not([type=checkbox]):not([type=file]) { border: 0; background: none; padding: 12px 0; }
+.search:focus-within { outline: 3px solid #a9b884; outline-offset: 3px; }
+.dialog-header { gap: 12px; }
+.dialog-header h2 { min-width: 0; }
+.dialog-header > .icon-button { flex-shrink: 0; }
+.dialog { overflow-y: auto; }
+.research-table-section, .research-table-scroll { min-width: 0; max-width: 100%; }
+.research-table-scroll { overscroll-behavior: contain; }
+.research-table-scroll:focus-visible { outline: 3px solid #a9b884; outline-offset: 3px; }
+.research-table-scroll .religion-table { min-width: 0; table-layout: fixed; font-size: 12px; }
+.religion-table-scroll { max-height: none; }
+.religion-table-scroll th, .religion-table-scroll td,
+.religion-table-scroll thead th, .religion-table-scroll tbody th,
+.religion-table-scroll td:last-child { min-width: 0; max-width: none; padding: 13px 12px; }
+.religion-table th:first-child { width: 42%; }
+.religion-table th:not(:first-child), .religion-table td { text-align: right; font-variant-numeric: tabular-nums; }
+.religion-source { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin-top: 12px; color: var(--muted); font-size: 10px; line-height: 1.8; }
+
+/* Use the available content width on tablets before the phone drawer takes over. */
+@media (min-width: 681px) and (max-width: 1100px) {
+  .page-heading { align-items: flex-start; }
+  .topbar { padding-inline: 24px; }
+  .breadcrumb { gap: 9px; min-width: 0; }
+  .breadcrumb > .muted, .topbar-slash { display: none; }
+  .topbar-actions { flex-shrink: 0; }
+  main { padding-inline: 24px; }
+  .research-metrics { grid-template-columns: 1fr; }
+  [data-large=true] .city-catalogue { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 680px) {
+  :root { --bottom-bar-space: calc(88px + env(safe-area-inset-bottom, 0px)); }
+  :root:lang(ta) { --bottom-bar-space: calc(120px + env(safe-area-inset-bottom, 0px)); }
+  main { padding: 26px max(16px, env(safe-area-inset-right, 0px)) calc(var(--bottom-bar-space) + 24px) max(16px, env(safe-area-inset-left, 0px)); }
+  .topbar { height: auto; min-height: 70px; padding: 10px 16px; }
+  .breadcrumb { min-width: 0; gap: 6px; line-height: 1.6; }
+  .breadcrumb > span { min-width: 0; overflow-wrap: anywhere; }
+  .topbar-actions { gap: 8px; flex-shrink: 0; }
+  .topbar .icon-button, .avatar { min-width: 44px; min-height: 44px; }
+  .mobile-menu { flex-shrink: 0; }
+  .sidebar, [data-large=true] .sidebar { max-width: calc(100% - 44px); padding-bottom: max(22px, env(safe-area-inset-bottom, 0px)); }
+  .bottom-nav { height: auto; min-height: var(--bottom-bar-space); align-items: stretch; padding: 8px max(6px, env(safe-area-inset-right, 0px)) max(10px, env(safe-area-inset-bottom, 0px)) max(6px, env(safe-area-inset-left, 0px)); }
+  .bottom-nav button { padding: 4px; min-height: 62px; font-size: 10px; }
+  .bottom-nav button span { max-width: 100%; overflow-wrap: anywhere; line-height: 1.5; }
+  .toast { bottom: calc(var(--bottom-bar-space) + 12px); }
+  .page-heading { align-items: flex-start; }
+  .home-heading { flex-wrap: wrap; }
+  h1 { font-size: clamp(35px, 9vw, 43px); }
+  .day-emblem { display: none; }
+  .scripture-hero { padding: 24px; }
+  .hero-content blockquote { font-size: clamp(32px, 8.5vw, 38px); }
+  .hero-content blockquote br, .hero-content p br { display: none; }
+  .hero-art { opacity: .25; pointer-events: none; }
+  .search-row, .city-select-row, .notification-row { flex-wrap: wrap; }
+  .search-row .search, .search-row select, .city-select-row label { flex: 1 1 100%; width: 100%; }
+  .city-select-row .primary { height: auto; white-space: normal; }
+  .notification-row .secondary { flex-shrink: 1; }
+  .form-row { grid-template-columns: 1fr; gap: 0; }
+  .city-review-form .form-actions { align-items: stretch; }
+  .form-actions > .primary, .form-actions > .secondary { flex: 1 1 140px; }
+  .backup-actions > .secondary { flex: 1 1 160px; }
+  .dialog, .dialog.wide { width: calc(100% - 24px); max-width: 680px; max-height: calc(100dvh - 24px); }
+  .dialog-header { padding: 14px 18px; }
+  .dialog-header .icon-button { min-height: 44px; min-width: 44px; }
+  .status-control { flex-wrap: wrap; }
+  .status-control select { width: 100%; }
+  .feature-banner { align-items: flex-start; }
+  .research-explorer { padding: 20px 14px; }
+  .city-catalogue { grid-template-columns: 1fr; }
+  .city-open { padding: 22px; }
+  .city-open h3 { font-size: 31px; padding-right: 20px; }
+  .city-open p { font-size: 12px; }
+  .city-open .text-button { font-size: 11px; }
+  .follow-button { min-width: 44px; min-height: 44px; top: 8px; right: 8px; }
+  .research-city-actions { align-items: stretch; }
+  .research-city-actions > button { flex: 1 1 150px; }
+  .catalogue-controls select, .catalogue-controls .secondary { width: 100%; flex: 1 1 100%; }
+  .religion-table-scroll th, .religion-table-scroll td { padding: 12px 8px; }
+  .research-table-scroll .religion-table { font-size: 11px; }
+  /* Wide research datasets become labeled records; every field stays available. */
+  .research-table-scroll:has(.wide-research-table) { max-height: 560px; }
+  .research-table-scroll .wide-research-table { min-width: 0; display: block; font-size: 12px; }
+  .wide-research-table thead { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); }
+  .wide-research-table tbody, .wide-research-table tr { display: block; }
+  .wide-research-table tbody tr + tr { border-top: 4px solid var(--border); }
+  .research-table-scroll .wide-research-table tbody th,
+  .research-table-scroll .wide-research-table td { display: block; min-width: 0; max-width: none; padding: 12px 16px; }
+  .wide-research-table tbody th { background: var(--green-light); color: var(--green); }
+  .wide-research-table td::before { content: attr(data-label); display: block; font-size: 11px; color: var(--text); font-weight: 600; margin-bottom: 5px; }
+  .research-background > article, .research-text-card, .research-metrics article { padding: 20px 16px; }
+  .city-guided-prayer, .session-content { padding: 26px 20px; }
+  .city-guided-prayer > p { font-size: 25px; }
+  .session-actions .primary { flex: 0 1 auto; }
+  .session-actions { gap: 10px; }
+  .editor-summary { grid-template-columns: 1fr; gap: 16px; }
+  .editor-summary > span { display: flex; align-items: center; gap: 14px; font-size: 12px; }
+  .editor-summary strong { margin: 0; min-width: 38px; }
+  .home-feature-link > span { min-width: 0; }
+  /* Keep controls readable and prevent input-focus zoom in iOS Safari. */
+  input:not([type=checkbox]):not([type=file]), select, textarea,
+  .search input, .catalogue-controls select, .library-search-controls input,
+  .library-search-controls select, .search-row select, .feature-editor label { font-size: 16px; }
+  .primary, .secondary, .text-button, .icon-button, .weekday-picker button,
+  .mood-picker button, .duration-picker button, .saved-cities button,
+  .tabs button, .prayer-section-links button { min-height: 44px; }
+}
+
+@media (max-width: 380px) {
+  .home-feature-grid { grid-template-columns: 1fr; }
+  .daily-city-focus { flex-direction: column; }
+  .journal-prompt { align-items: flex-start; padding: 20px 16px; gap: 12px; }
+  .feature-banner { flex-direction: column; }
+  .reminder-card > .soft-icon { display: none; }
+  .religion-table th:first-child { width: 38%; }
+  .religion-table-scroll th, .religion-table-scroll td { padding-inline: 6px; }
+}
+
+/* Large-text mode needs wrapping at desktop sizes too. */
+[data-large=true] .form-row { grid-template-columns: 1fr; }
+[data-large=true] .notification-row, [data-large=true] .status-control { flex-wrap: wrap; }
+[data-large=true] .religion-table { table-layout: auto; }
+@media (max-height: 500px) {
+  .dialog, .dialog.wide { max-height: calc(100dvh - 16px); }
+  .sidebar { padding-top: 20px; }
+}

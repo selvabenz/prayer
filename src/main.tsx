@@ -10,6 +10,7 @@ import { watchAppUpdates } from './app-update';
 import './style.css';
 import './features.css';
 import './places.css';
+import './responsive.css';
 
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {

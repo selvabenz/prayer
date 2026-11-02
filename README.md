@@ -112,7 +112,11 @@ English/Tamil navigation and core prayer controls, dark mode, larger text, keybo
 
 ## Deployment and remaining work
 
-GitHub CI runs tests and the production build. The manual **Deploy Prayer to Pages** workflow publishes from the chosen ref; GitHub Pages must use GitHub Actions as its build source.
+GitHub CI runs unit tests, responsive browser checks, and the production build. The manual **Deploy Prayer to Pages** workflow publishes from the chosen ref; GitHub Pages must use GitHub Actions as its build source.
+
+Run `npm run test:responsive` to check every page, city-research tab, editor, prayer session, settings, and shared-card flow in real Chrome. Local checks use installed Google Chrome; CI installs Chromium. The six viewports cover 320px and 390px phones, a 768px tablet, 1024px and 1440px desktops, and 844×390 landscape. Each runs with standard settings and with Tamil navigation, larger text, dark mode, and long saved content. Tests check horizontal overflow and the three-column religion table; screenshots and failure traces are written to `test-results/`. These checks do not replace real-device or screen-reader testing.
+
+Phone layouts stack forms and city cards, preserve safe-area space for navigation, and show wide research tables as labeled records within a scrollable region. The religion table contains only **Religion, People, Share**; its historical Census 2011 NCT Delhi context and original source remain outside the table.
 
 Tests cover storage and migrations, backup validation, reminders and calendar recurrence, city context preservation, private sharing defaults, Tamil share links, received-card import, praise-to-testimony flow, reading progress/plans, and exclusion of private notes from shared plans. The build also verifies offline asset paths, repository subpaths, fonts, cache isolation, and icon sizes.
 

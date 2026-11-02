@@ -41,14 +41,28 @@ export function ResearchExplorer({data,change,notify,addPrayer,chooseCity}:Props
 function PeopleResearch({city}:{city:ResearchCity}) {
   const faith=research.faithAndPeople.find(r=>r.City===city.name);
   return <div className="people-research"><article className="research-text-card"><Users size={25}/><h2>Communities and languages</h2><p>{asText(city.catalogue['Communities / languages to research'])}</p><p>{asText(city.catalogue['Ethnic/regional/linguistic diversity notes'])}</p><p>{faith&&rowText(faith,'Ethnicity data availability')}</p><p className="research-context">Language, religion, caste, regional identity, and ethnicity are distinct. None establishes an individual’s identity or needs.</p></article>{city.id==='delhi'?<>
-    <ResearchTable title="Religion: historical NCT Delhi context" rows={research.delhi.religions} columns={['Religion (self-reported)','People','Share (%)','Census year','Geography','Methodology']} sourceKey="Official source" notice="Census 2011, NCT Delhi. These are historical self-reported categories, not 2026 estimates or Delhi city-proper proportions."/>
+    <ReligionTable/>
     <ResearchTable title="Languages: scheduled-language table" rows={research.delhi.languages} columns={['Scheduled-language category','People','Share of table (%)','Census year','Geography','Statistical warning']} sourceKey="Official source" notice="Shares use the table denominator of 16,757,013 people, not the total NCT population. The table excludes other language classifications and does not measure ethnicity."/>
     <ResearchTable title="Women, children, and social safety" rows={research.delhi.socialSafety} columns={['Topic / indicator','Value','Unit','Year','Area','Interpretation & limitations']} sourceKey="Source URL" notice="Workbook-reported registered cases and rates retain their category, area, and denominator. Subcategories are part of totals; do not add them again."/>
     <ResearchTable title="Child labour and bonded-labour research" rows={research.delhi.labour} columns={['Evidence type','Topic','Reported value','Year/date','Geography','Important limitations','Review status']} sourceKey="Source URL" notice="An incident report or rescue count does not establish bonded-labour prevalence. Child labour, trafficking, forced labour, and debt bondage are different categories."/>
     </>:<article className="research-text-card"><h2>Demographic verification is pending.</h2><p>{faith&&rowText(faith,'Religious profile verification')}</p><p>Religion percentages and city-specific ethnicity counts are not shown because this workbook does not establish them. Blank fields are not zero.</p><SourceLink url={faith?rowText(faith,'Source URL'):''}/></article>}</div>;
 }
+function ReligionTable() {
+  const rows=research.delhi.religions;
+  const sources=[...new Set(rows.map(r=>asText(r['Official source'])))];
+  return <section className="research-table-section religion-section">
+    <h2>Religion: historical NCT Delhi context</h2>
+    <p id="religion-context">Census 2011, NCT Delhi. These are historical self-reported categories, not 2026 estimates or Delhi city-proper proportions.</p>
+    <div className="research-table-scroll religion-table-scroll" tabIndex={0} role="region" aria-label="Religion: historical NCT Delhi context">
+      <table className="religion-table" aria-label="Religion in NCT Delhi" aria-describedby="religion-context"><thead><tr><th scope="col">Religion</th><th scope="col">People</th><th scope="col">Share</th></tr></thead><tbody>
+        {rows.map(r=><tr key={r.sourceRow}><th scope="row">{asText(r['Religion (self-reported)'])}</th><td>{formattedMetric(r.People)}</td><td>{formattedMetric(r['Share (%)'])}%</td></tr>)}
+      </tbody></table>
+    </div>
+    <div className="religion-source"><span>Source: Census C-01 · DELHI RELIGIONS, workbook rows {rows[0].sourceRow}–{rows.at(-1)!.sourceRow}.</span>{sources.map(url=><SourceLink key={url} url={url} label="Official Census source"/>)}</div>
+  </section>;
+}
 function ResearchTable({title,notice,rows,columns,sourceKey}:{title:string;notice:string;rows:ResearchRow[];columns:string[];sourceKey:string}) {
-  return <section className="research-table-section"><h2>{title}</h2><p>{notice}</p><div className="research-table-scroll" tabIndex={0} role="region" aria-label={title}><table><thead><tr>{columns.map(c=><th key={c} scope="col">{c}</th>)}<th scope="col">Source</th></tr></thead><tbody>{rows.map((r,i)=><tr key={i}>{columns.map((c,j)=>j===0?<th scope="row" key={c}>{formattedMetric(r[c])}</th>:<td key={c}>{formattedMetric(r[c])}</td>)}<td><SourceLink url={asText(r[sourceKey])}/><small>{r.sourceSheet} · row {r.sourceRow}</small></td></tr>)}</tbody></table></div></section>;
+  return <section className="research-table-section"><h2>{title}</h2><p>{notice}</p><div className="research-table-scroll" tabIndex={0} role="region" aria-label={title}><table className="wide-research-table" role="table"><thead><tr role="row">{columns.map(c=><th key={c} scope="col">{c}</th>)}<th scope="col">Source</th></tr></thead><tbody>{rows.map((r,i)=><tr key={i} role="row">{columns.map((c,j)=>j===0?<th scope="row" key={c}>{formattedMetric(r[c])}</th>:<td key={c} data-label={c} role="cell">{formattedMetric(r[c])}</td>)}<td data-label="Source" role="cell"><SourceLink url={asText(r[sourceKey])}/><small>{r.sourceSheet} · row {r.sourceRow}</small></td></tr>)}</tbody></table></div></section>;
 }
 
 export function ResearchReview({city,data,change,notify}:{city:ResearchCity;data:Data;change:Props['change'];notify:Props['notify']}) {
