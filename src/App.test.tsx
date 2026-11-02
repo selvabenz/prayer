@@ -5,8 +5,10 @@ import { cleanup, render, screen, waitFor, within } from '@testing-library/react
 import userEvent from '@testing-library/user-event';
 import App from './App';
 import { initial, readData, writeData } from './data';
+import * as storage from './data';
 
 beforeEach(async () => {
+  vi.restoreAllMocks();
   await writeData(structuredClone(initial));
   HTMLDialogElement.prototype.showModal = function () { this.setAttribute('open', ''); };
   HTMLDialogElement.prototype.close = function () { this.removeAttribute('open'); };
@@ -20,6 +22,30 @@ async function openApp() {
 }
 
 describe('personal prayer experience', () => {
+  it('retries a failed save without duplicating the new prayer', async () => {
+    const user = userEvent.setup();
+    await openApp();
+    const persist = vi.spyOn(storage, 'writeData').mockRejectedValueOnce(new Error('Storage full'));
+    await user.click(screen.getByRole('button', { name: 'Add a prayer' }));
+    const editor = screen.getByRole('dialog');
+    await user.type(within(editor).getByLabelText('Prayer title'), 'A prayer to keep');
+    await user.click(within(editor).getByRole('button', { name: 'Save prayer' }));
+    await screen.findByText('Could not save. Keep this window open and export a backup.');
+    expect(screen.getByRole('dialog')).toBeTruthy();
+    persist.mockRestore();
+    await user.click(within(editor).getByRole('button', { name: 'Save prayer' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect((await readData()).prayers).toHaveLength(1);
+  });
+
+  it('blocks writes when existing records cannot be read', async () => {
+    vi.spyOn(storage, 'readData').mockRejectedValueOnce(new Error('Device storage unavailable'));
+    render(<App/>);
+    await screen.findByRole('heading', { name: 'Your saved space could not be opened.' });
+    expect(screen.queryByRole('button', { name: 'Add a prayer' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Try again' })).toBeTruthy();
+  });
+
   it('creates a prayer, saves its history, and moves an answer to the garden', async () => {
     const user = userEvent.setup();
     await openApp();
