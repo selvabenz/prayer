@@ -7,6 +7,7 @@ import '@fontsource/libre-caslon-display/400.css';
 import '@fontsource/noto-sans-tamil/400.css';
 import App from './App';
 import './style.css';
+import './features.css';
 
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {

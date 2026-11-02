@@ -34,6 +34,13 @@ self.addEventListener('fetch', event => {
     return fetch(event.request);
   }));
 });
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  event.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windows => {
+    const existing = windows.find(client => client.url.startsWith(self.registration.scope));
+    return existing ? existing.focus() : self.clients.openWindow(self.registration.scope);
+  }));
+});
 `;
 await writeFile(path.join(root, 'sw.js'), sw);
 console.log(`Offline shell ${version}: ${urls.length} local assets precached.`);

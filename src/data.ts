@@ -1,21 +1,23 @@
 import { openDB } from 'idb';
+import { emptyExtras, validateExtras, type Extras } from './features-model';
 
 export const categories = ['Family', 'Health', 'Personal', 'Church', 'Work', 'Missions', 'Thanksgiving'] as const;
 export const statuses = ['Ongoing', 'Partially answered', 'Answered', 'Closed'] as const;
 export type Category = typeof categories[number];
 export type Status = typeof statuses[number];
 export type PrayerUpdate = { id: string; text: string; date: string };
-export type Prayer = { id: string; title: string; body: string; category: Category; status: Status; priority: boolean; created: string; updated: string; updates: PrayerUpdate[]; recurrence: 'Anytime' | 'Daily' | 'Weekly'; date: string };
+export type Prayer = { id: string; title: string; body: string; category: Category; status: Status; priority: boolean; created: string; updated: string; updates: PrayerUpdate[]; recurrence: 'Anytime' | 'Daily' | 'Weekly'; date: string; sharing?: 'private' | 'shareable'; praise?: string; answeredAt?: string };
 export type Entry = { id: string; title: string; body: string; mood: string; created: string };
 export type Session = { id: string; created: string; seconds: number };
 export type Settings = { language: 'en' | 'ta'; dark: boolean; large: boolean; name: string };
-export type Data = { prayers: Prayer[]; entries: Entry[]; sessions: Session[]; settings: Settings };
-export const initial: Data = { prayers: [], entries: [], sessions: [], settings: { language: 'en', dark: false, large: false, name: '' } };
+export type Data = { prayers: Prayer[]; entries: Entry[]; sessions: Session[]; settings: Settings } & Extras;
+export const initial: Data = { prayers: [], entries: [], sessions: [], settings: { language: 'en', dark: false, large: false, name: '' }, ...emptyExtras };
 export const uid = () => crypto.randomUUID();
 const db = () => openDB('prayer-private', 1, { upgrade(database) { database.createObjectStore('app'); } });
 export async function readData(): Promise<Data> {
   const database = await db();
-  return (await database.get('app', 'data')) ?? structuredClone(initial);
+  const saved = await database.get('app', 'data');
+  return saved ? parseBackup(JSON.stringify({version: 1, data: saved})) : structuredClone(initial);
 }
 export async function writeData(data: Data) {
   const database = await db();
@@ -29,11 +31,12 @@ export function parseBackup(text: string): Data {
   const date = (v: unknown) => str(v) && Number.isFinite(Date.parse(v));
   if (!Array.isArray(d.prayers) || !Array.isArray(d.entries) || !Array.isArray(d.sessions) || !d.settings) throw new Error('This backup is incomplete.');
   if (!d.prayers.every((p: Prayer) => p && str(p.id) && str(p.title) && p.title.trim() && str(p.body) && categories.includes(p.category) && statuses.includes(p.status) && typeof p.priority === 'boolean' && date(p.created) && date(p.updated) && str(p.date) && ['Anytime', 'Daily', 'Weekly'].includes(p.recurrence) && Array.isArray(p.updates) && p.updates.every(u => u && str(u.id) && str(u.text) && date(u.date)))) throw new Error('The backup contains an invalid prayer.');
+  if (!d.prayers.every((p: Prayer) => (p.sharing === undefined || ['private','shareable'].includes(p.sharing)) && (p.praise === undefined || str(p.praise)) && (p.answeredAt === undefined || date(p.answeredAt)))) throw new Error('The backup contains invalid prayer sharing or praise details.');
   if (!d.entries.every((e: Entry) => e && str(e.id) && str(e.title) && str(e.body) && str(e.mood) && date(e.created))) throw new Error('The backup contains an invalid journal entry.');
   if (!d.sessions.every((s: Session) => s && str(s.id) && date(s.created) && typeof s.seconds === 'number' && Number.isFinite(s.seconds) && s.seconds >= 0)) throw new Error('The backup contains an invalid session.');
   if (!['en', 'ta'].includes(d.settings.language) || typeof d.settings.dark !== 'boolean' || typeof d.settings.large !== 'boolean' || !str(d.settings.name)) throw new Error('The backup contains invalid settings.');
   for (const list of [d.prayers, d.entries, d.sessions]) if (new Set(list.map((item: {id: string}) => item.id)).size !== list.length) throw new Error('The backup contains duplicate records.');
-  return { prayers: d.prayers, entries: d.entries, sessions: d.sessions, settings: d.settings };
+  return { prayers: d.prayers, entries: d.entries, sessions: d.sessions, settings: d.settings, ...validateExtras(d) };
 }
 
 export const scriptures = [

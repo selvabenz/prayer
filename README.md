@@ -1,10 +1,12 @@
 # Prayer
 
-A quiet place to meet with God. A mobile-first, account-free prayer companion built with React, TypeScript, and Vite.
+A quiet place to meet with God. A mobile-first prayer companion built with React, TypeScript, Vite, and IndexedDB.
 
-## Run locally
+**Live app: https://selvabenz.github.io/prayer/**
 
-Requires Node.js 22.12+ (Node 24 recommended).
+## Develop and verify
+
+Node.js 24 is recommended (22.12+ supported).
 
 ```sh
 npm ci
@@ -17,54 +19,75 @@ npm run build
 npm run preview
 ```
 
-The production build is in `dist/`. Host that folder on any static HTTPS host. The relative asset paths support root domains and repository subpaths such as `/prayer/`. Service workers run in production on HTTPS or localhost; `npm run dev` intentionally does not register one.
+Host `dist/` on a static HTTPS host. Relative URLs support repository subpaths such as `/prayer/`. Service workers are enabled only for production builds on HTTPS or localhost.
 
-## Personal release · v0.1
+## Personal prayer
 
-- Today: a quiet welcome, Scripture, prayer list, and reflection prompts.
-- Prayers: create, edit, search, categorize, prioritize, and delete requests; record a prayer rhythm and optional date.
-- Prayer journeys: dated updates and ongoing, partially answered, answered, or closed status.
-- Pray now: six guided moments, optional 2/5/10/15 minute or untimed sessions, pause/resume, quiet mode, and rotating personal requests.
-- Journal: private reflections, optional titles, a heart check-in, editing, deletion, and search. Tamil text is preserved.
-- Gratitude garden: revisit prayers you have personally marked answered.
-- Scripture library: six curated English KJV passages and personal reflection prompts. Scripture is stored separately from editable notes.
-- English/Tamil navigation and core controls, larger text, and dark mode. Guided prose and some secondary controls remain English.
-- IndexedDB persistence, JSON backup export and validated restore.
-- Installable offline PWA, including local fonts and icons. No remote assets, analytics, advertisements, or account registration.
+- Record, edit, categorize, prioritize, and search personal prayer requests.
+- Track dated updates, ongoing/partially answered/answered/closed status, and an answered-prayer date stamp.
+- Save a praise point, share praise independently of the original request, and turn it into a private testimony.
+- Pray through six guided moments, timed or untimed, with pause/resume and quiet mode.
+- Keep a searchable, editable journal. Tamil text is preserved.
+- Revisit answered prayers in the gratitude garden and six curated English KJV passages.
 
-## Privacy and recovery
+## Reminders
 
-All personal records stay in this browser's IndexedDB database. Nothing is uploaded. Records **are not encrypted**: someone with access to the browser profile can potentially read them. This is not a substitute for an encrypted vault.
+Create hourly reminders within a selected daytime window, daily times, selected weekdays, or a one-off date. Schedules follow the device’s local time zone. Pause, edit, delete, or snooze an in-app prompt for ten minutes.
 
-Use **Settings → Export backup** regularly, especially before clearing browser data or changing devices. Backups are readable JSON and should be stored privately. Restore validates the entire file and asks before replacing the device's existing records. Storage failures are shown visibly and leave the current in-memory data available for export. Concurrent writes are serialized.
+In-app scheduling runs only while Prayer is open and active. Optional browser notifications are requested only from an explicit user action and contain generic wording, never private prayer text.
 
-The service worker caches only the built application assets, including fonts. It never caches personal records or API responses. Updates wait for existing app tabs to close so an update does not interrupt an unfinished entry. Offline availability requires one successful online production visit.
+**For closed-app reminders, use “Export to calendar.”** The generated iCalendar file contains recurring rules and an alarm. The user must import it into a calendar and enable that calendar’s alerts. Delivery depends on the chosen calendar and device. Names and prayer details are omitted from the calendar file. Editing, pausing, or deleting a reminder in Prayer does not update an event already imported into another calendar.
 
-## Deliberate release boundaries
+GitHub Pages cannot run a background scheduler. Server-scheduled Web Push is not connected and is not claimed by this release.
 
-**Pray together is a clearly labeled preview.** There is no authentication, backend, cloud synchronization, public sharing, invitation delivery, or shared group storage. Private prayers and journals are never shown in this preview.
+## City prayer
 
-Daily/weekly rhythms and dates are metadata for personal organization; they do not send notifications. Reliable reminders require a server-side scheduler and Web Push. Voice recording, complete Tamil localization, an authorized Tamil Bible, cloud encryption, and group permissions are future work. Do not describe this release as production ready for sensitive shared church data.
+Choose any city manually, or select **Find my city**. Before detection, a consent panel explains that the browser will request location and that coordinates rounded to two decimal places will be sent to [BigDataCloud](https://www.bigdatacloud.com/docs/free-api/free-reverse-geocode-to-city-api). The provider receives the request and IP address. Coordinates are discarded; only the chosen city and user-written notes are saved.
 
-## Structure
+The detected city is shown for confirmation before saving. Permission denial, offline use, and provider failures retain a manual-entry path. Detection is never run automatically on startup and never uses an undisclosed IP fallback.
 
-```text
-src/App.tsx          Screens, editors, prayer session, settings
-src/data.ts          Types, IndexedDB storage, backup validation, Scripture
-src/style.css        Responsive design, themes, accessibility preferences
-src/*.test.*         Storage/recovery and complete component workflows
-scripts/build-sw.mjs Content-versioned offline app shell
-public/              Manifest and installation icons
-```
+Save background context, people/communities to remember, local prayer needs, and a source link. Switching cities preserves previously saved city notes. Add a city’s needs directly to a new private prayer request.
 
-The data model keeps prayer updates, journal entries, and sessions separate. Future accounts and group permissions should live in explicit, authorized backend models rather than making local records implicitly shared.
+Starter background profiles were reviewed on 2 November 2026 and use official district sources:
 
-## Deployment
+- [Chennai](https://chennai.nic.in/about-district/)
+- [Coimbatore](https://coimbatore.nic.in/about-district/)
+- [Bengaluru](https://bengaluruurban.nic.in/en/)
 
-The included GitHub Actions workflow runs tests and builds on pushes and pull requests. A separate manual Pages workflow can deploy `dist/` when GitHub Pages is configured to use **GitHub Actions** in the repository settings. No hosting or repository permissions are changed automatically.
+People lists and needs in starter profiles are clearly labeled prayer prompts, not population statistics, religious profiles, or live reports. Other cities start without invented background. Users can add verified context and sources.
 
-## Verification
+## Sharing and testimonies
 
-Tests cover IndexedDB persistence, backup validation and round trips, prayer updates and answered status, journal persistence with Tamil text, separation from the group preview, guided session flow, and language/theme preferences. The production build generates a service worker and validates all referenced offline asset paths.
+Requests remain private by default. Selecting **Allow sharing a copy** enables a review flow; it does not publish anything. The user edits the exact title/message and confirms permission to share before using the native share sheet or copying a link. Praise and testimony sharing use the same review flow.
 
-Native Android/iPhone installation, browser notification permissions, and real device accessibility require device testing before a production launch.
+Shared text is encoded in a URL fragment, not uploaded to a database. The fragment contains a **readable snapshot**, not encrypted or authenticated content. Anyone with the link can read and forward it. Copies cannot be revoked or updated. Selected messaging services, clipboard tools, browser history/sync, and recipients may retain links. Journal entries, prayer history, location, and private book/group notes are not added to sharing payloads.
+
+Recipients see a read-only card and an author-verification notice. A received prayer or testimony is saved privately only after an explicit action. There is no public feed, moderation service, authenticated group membership, or live commenting.
+
+The Testimonies page stores private stories and praise points. It supports creation, editing, search, deletion, and sharing selected copies to encourage others.
+
+## Prayer books and reading groups
+
+Keep a bookshelf with external reading links, chapter progress, and private notes. Curated links include Andrew Murray’s [The Ministry of Intercession](https://www.gutenberg.org/ebooks/29296), E. M. Bounds’s [Power Through Prayer](https://www.gutenberg.org/ebooks/65115), and Andrew Murray’s [With Christ in the School of Prayer](https://www.ccel.org/ccel/murray/prayer).
+
+Books are hosted by external providers and need internet access. Availability and reuse rights vary by country; the app does not redistribute their full text.
+
+Create a reading-group plan with a book, reading assignment, meeting time, discussion prompt, and private preparation notes. Share the plan as a reviewed read-only invitation. Private preparation notes and book notes are excluded. Plans are stored on this device; membership, chat, joint progress, and changes are not synchronized between recipients. Family/church prayer circles remain clearly labeled as future work.
+
+## Privacy, backup, and offline use
+
+Records are stored in this browser’s IndexedDB. **They are not encrypted.** Someone with access to the browser profile may be able to read them. Export backups regularly before clearing storage or changing devices. Backups contain readable JSON and should be kept privately.
+
+Backup export/restore includes prayers, journals, sessions, reminders, testimonies, active and saved cities, books, and reading plans. Original v0.1 backups migrate without losing their records. New fields are validated before restore, and restore asks before replacing local data. A failed initial storage read blocks writes; failed-save retries do not duplicate new prayers or journal entries.
+
+The production build generates a content-versioned offline shell containing all local assets, including fonts. The service worker caches built assets only, not personal records or external location responses. A new version waits until old tabs close. If an update remains pending, close all Prayer tabs and reopen. Offline use requires one successful online production visit.
+
+English/Tamil navigation and core prayer controls, dark mode, larger text, keyboard access, and reduced-motion preferences are supported. New feature prose and some controls remain English. An authorized Tamil Bible is not included.
+
+## Deployment and remaining work
+
+GitHub CI runs tests and the production build. The manual **Deploy Prayer to Pages** workflow publishes from the chosen ref; GitHub Pages must use GitHub Actions as its build source.
+
+Tests cover storage and migrations, backup validation, reminders and calendar recurrence, city context preservation, private sharing defaults, Tamil share links, received-card import, praise-to-testimony flow, reading progress/plans, and exclusion of private notes from shared plans. The build also verifies offline asset paths, repository subpaths, fonts, cache isolation, and icon sizes.
+
+Real iOS/Android installation, calendar import/alerts, location-provider interoperability, native sharing, and screen-reader behavior require device testing. Full cloud synchronization, authenticated collaborative groups, a public moderated testimony feed, and closed-app Web Push require backend services.
