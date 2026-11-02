@@ -70,13 +70,13 @@ export default function App() {
   function newPrayer(title = '', body = '') { setEditing(title ? { title, body } as Prayer : null); setModal('prayer'); }
   const change = (update: (current: Data) => Data) => save(update(dataRef.current));
   const featureProps = { data, change, notify: setToast, share: setShareCard };
-  const extraNav = [{id:'reminders',text:'Prayer reminders',icon:Bell},{id:'city',text:'Pray for your city',icon:MapPin},{id:'testimonies',text:'Testimonies',icon:MessageCircle},{id:'library',text:'Prayer book library',icon:Library}] as const;
+  const extraNav = [{id:'reminders',text:'Prayer reminders',icon:Bell},{id:'journal',text:'Journal',icon:BookOpen},{id:'testimonies',text:'Testimonies',icon:MessageCircle},{id:'library',text:'Prayer book library',icon:Library}] as const;
   function detail(p: Prayer) { setSelected(p.id); setConfirmDelete(false); setModal('detail'); }
   const current = data.prayers.find(p => p.id === selected);
   const active = data.prayers.filter(p => p.status === 'Ongoing' || p.status === 'Partially answered').sort((a,b) => Number(b.priority) - Number(a.priority));
   const answered = data.prayers.filter(p => p.status === 'Answered');
   const greeting = new Date().getHours() < 12 ? 'Good morning' : new Date().getHours() < 17 ? 'Good afternoon' : 'Good evening';
-  const nav = [{ id: 'today', text: 'Today', icon: Home }, { id: 'prayers', text: 'My prayers', icon: Heart }, { id: 'journal', text: 'Journal', icon: BookOpen }, { id: 'groups', text: 'Pray together', icon: Users }] as const;
+  const nav = [{ id: 'today', text: 'Today', icon: Home }, { id: 'prayers', text: 'My prayers', icon: Heart }, { id: 'city', text: 'Pray for your city', icon: MapPin }, { id: 'groups', text: 'Pray together', icon: Users }] as const;
   const exportBackup = () => { const url = URL.createObjectURL(new Blob([JSON.stringify({ version: 1, exported: new Date().toISOString(), data: dataRef.current }, null, 2)], { type: 'application/json' })); const a = document.createElement('a'); a.href = url; a.download = `prayer-backup-${new Date().toISOString().slice(0,10)}.json`; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); setToast('Backup downloaded. Store it somewhere private.'); };
   if (!loaded) return <div className="loading"><Sprout size={36}/><p>Preparing your quiet space…</p></div>;
   if (readError) return <div className="loading"><ShieldCheck size={36}/><h2>Your saved space could not be opened.</h2><p>Please reopen Prayer to try again. Your existing records have not been replaced.</p><button className="primary" onClick={() => window.location.reload()}>Try again</button></div>;
