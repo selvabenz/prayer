@@ -25,7 +25,7 @@ export async function writeData(data: Data) {
 }
 export function parseBackup(text: string): Data {
   const raw = JSON.parse(text);
-  if (raw.version !== 1 || !raw.data) throw new Error('Unsupported backup. Please select a Prayer backup file.');
+  if (![1,2].includes(raw.version) || !raw.data) throw new Error('Unsupported backup. Please select a Prayer backup file.');
   const d = raw.data;
   const str = (v: unknown): v is string => typeof v === 'string';
   const date = (v: unknown) => str(v) && Number.isFinite(Date.parse(v));

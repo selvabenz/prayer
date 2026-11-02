@@ -1,0 +1,11 @@
+import { ArrowRight, BookOpen, ClipboardCheck, Flower2, Heart, Users } from 'lucide-react';
+import type { Data } from './data';
+
+export function CommunityHub({data,open}:{data:Data;open:(page:'testimonies'|'library'|'groups'|'editor')=>void}) {
+  const cards=[
+    {id:'testimonies' as const,title:'Testimonies',description:'Remember an answer. Prepare a story of gratitude and share a reviewed copy.',icon:Flower2,count:`${data.testimonies.length} personal stories`},
+    {id:'library' as const,title:'Prayer book library',description:'Find a good book, keep a bookmark, and record what you are learning.',icon:BookOpen,count:`${data.books.length} books on your shelf`},
+    {id:'groups' as const,title:'Reading circles',description:'Choose chapters, plan a conversation, and invite others with a shared reading plan.',icon:Users,count:`${data.readingGroups.length} reading plans`},
+  ];
+  return <><div className="page-heading"><div><div className="eyebrow"><span className="tiny-line"/>GROW IN FAITH AND CARE</div><h1>Community<span className="sage-dot">.</span></h1><p>Encouragement, good words, and prayer with people you trust.</p></div></div><section className="community-intro"><span className="soft-icon"><Heart size={25}/></span><h2>A little encouragement goes a long way.</h2><p>Start with your own story or a book to read together. Choose what you share, and keep space for the things that remain private.</p></section><div className="community-grid">{cards.map(c=><button key={c.id} className="community-card" onClick={()=>open(c.id)}><c.icon size={27} strokeWidth={1.3}/><h2>{c.title}</h2><p>{c.description}</p><span>{c.count}<ArrowRight size={16}/></span></button>)}</div><div className="feature-note"><Users size={20}/><p>Your stories and reading plans are stored on this device. You can share reviewed snapshots. Public testimony publishing, anonymous accounts, moderated discussions, and live prayer groups are not connected yet.</p></div><button className="research-workspace-link" onClick={()=>open('editor')}><ClipboardCheck size={21}/><div><h3>City research workspace</h3><p>Check sources, record local feedback, and prepare city material for review.</p></div><ArrowRight size={17}/></button></>;
+}

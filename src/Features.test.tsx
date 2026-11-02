@@ -73,7 +73,7 @@ describe('new prayer tools',()=>{
     await user.click(screen.getAllByRole('button',{name:'Pray for your city'})[0]);
     await user.type(screen.getByLabelText('City name'),'Chennai');
     await user.click(screen.getByRole('button',{name:'Choose city'}));
-    await screen.findByRole('heading',{name:/Chennai/});
+    await screen.findByRole('button',{name:'Pray for Chennai'});
     await user.click(screen.getByRole('button',{name:'Edit city notes'}));
     await user.clear(screen.getByLabelText('Local prayer needs'));
     await user.type(screen.getByLabelText('Local prayer needs'),'Care for our neighbours');

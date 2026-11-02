@@ -1,10 +1,12 @@
-export type Reminder = { id: string; title: string; mode: 'Hourly' | 'Daily' | 'Weekly' | 'Once'; time: string; endTime: string; days: number[]; date: string; enabled: boolean; lastFired?: string; snoozedUntil?: string };
-export type Testimony = { id: string; title: string; body: string; praise: string; created: string; prayerId?: string };
+export type Reminder = { id: string; title: string; mode: 'Hourly' | 'Daily' | 'Weekly' | 'Once' | 'Custom'; time: string; endTime: string; days: number[]; date: string; enabled: boolean; times?:string[]; lastFired?: string; snoozedUntil?: string };
+export type QuietHours = {enabled:boolean;start:string;end:string};
+export type Testimony = { id: string; title: string; body: string; praise: string; created: string; prayerId?: string;scripture?:string;topics?:string[] };
 export type CityProfile = { name: string; country: string; background: string; people: string; needs: string; source: string; reviewed: string };
-export type Book = { id: string; title: string; author: string; url: string; chapters: number; completed: number; notes: string };
+export type Book = { id: string; title: string; author: string; url: string; chapters: number; completed: number; notes: string;language?:string;bookmark?:number };
 export type ReadingGroup = { id: string; name: string; bookId: string; meeting: string; chapter: string; prompt: string; notes: string };
-export type Extras = { reminders: Reminder[]; testimonies: Testimony[]; city: CityProfile | null; cities: CityProfile[]; books: Book[]; readingGroups: ReadingGroup[] };
-export const emptyExtras: Extras = { reminders: [], testimonies: [], city: null, cities: [], books: [], readingGroups: [] };
+export type CityReview = {id:string;reviewer:string;date:string;sourceChecked:boolean;communityChecked:boolean;notes:string;status:'draft'|'in-review'|'locally-reviewed'};
+export type Extras = { reminders: Reminder[]; testimonies: Testimony[]; city: CityProfile | null; cities: CityProfile[]; books: Book[]; readingGroups: ReadingGroup[]; followedCities:string[];cityReviews:CityReview[];quietHours:QuietHours };
+export const emptyExtras: Extras = { reminders: [], testimonies: [], city: null, cities: [], books: [], readingGroups: [],followedCities:[],cityReviews:[],quietHours:{enabled:false,start:'22:00',end:'06:00'} };
 
 const text = (value: unknown): value is string => typeof value === 'string';
 const record = (value: unknown): value is Record<string, unknown> => !!value && typeof value === 'object' && !Array.isArray(value);
@@ -18,7 +20,8 @@ export function validateExtras(raw: Record<string, unknown>): Extras {
     if (!Array.isArray(items) || !items.every(item => record(item) && text(item.id) && item.id.trim() && valid(item)) || new Set(items.map(item => item.id)).size !== items.length) throw new Error(`Invalid ${key} in this backup.`);
     return items as T[];
   }
-  const reminders = list<Reminder>('reminders', r => strings(r, ['title','time','endTime','date']) && !!String(r.title).trim() && ['Hourly','Daily','Weekly','Once'].includes(String(r.mode)) && /^([01]\d|2[0-3]):[0-5]\d$/.test(String(r.time)) && /^([01]\d|2[0-3]):[0-5]\d$/.test(String(r.endTime)) && (r.mode !== 'Hourly' || String(r.time) <= String(r.endTime)) && Array.isArray(r.days) && r.days.every(d => Number.isInteger(d) && d >= 0 && d <= 6) && (r.mode !== 'Weekly' || r.days.length > 0) && (r.mode !== 'Once' || /^\d{4}-\d{2}-\d{2}$/.test(String(r.date)) && validDate(r.date)) && typeof r.enabled === 'boolean' && (r.lastFired === undefined || validDate(r.lastFired)) && (r.snoozedUntil === undefined || validDate(r.snoozedUntil)));
+  const time=(value:unknown)=>text(value)&&/^([01]\d|2[0-3]):[0-5]\d$/.test(value);
+  const reminders = list<Reminder>('reminders', r => strings(r, ['title','time','endTime','date']) && !!String(r.title).trim() && ['Hourly','Daily','Weekly','Once','Custom'].includes(String(r.mode)) && time(r.time) && time(r.endTime) && (r.mode !== 'Hourly' || String(r.time) <= String(r.endTime)) && Array.isArray(r.days) && r.days.every(d => Number.isInteger(d) && d >= 0 && d <= 6) && (!['Weekly','Custom'].includes(String(r.mode)) || r.days.length > 0) && (r.mode!=='Custom'||Array.isArray(r.times)&&r.times.length>0&&r.times.length<=12&&r.times.every(time)&&new Set(r.times).size===r.times.length) && (r.mode !== 'Once' || /^\d{4}-\d{2}-\d{2}$/.test(String(r.date)) && validDate(r.date)) && typeof r.enabled === 'boolean' && (r.lastFired === undefined || validDate(r.lastFired)) && (r.snoozedUntil === undefined || validDate(r.snoozedUntil)));
   const testimonies = list<Testimony>('testimonies', r => strings(r, ['title','body','praise','created']) && !!String(r.title).trim() && validDate(r.created) && (r.prayerId === undefined || text(r.prayerId)));
   const books = list<Book>('books', r => strings(r, ['title','author','url','notes']) && !!String(r.title).trim() && (!r.url || safeUrl(String(r.url))) && Number.isInteger(r.chapters) && Number(r.chapters) > 0 && Number(r.chapters) <= 10000 && Number.isInteger(r.completed) && Number(r.completed) >= 0 && Number(r.completed) <= Number(r.chapters));
   const readingGroups = list<ReadingGroup>('readingGroups', r => strings(r, ['name','bookId','meeting','chapter','prompt','notes']) && !!String(r.name).trim());
@@ -30,7 +33,14 @@ export function validateExtras(raw: Record<string, unknown>): Extras {
   const validCity = (value: unknown): value is CityProfile => record(value) && strings(value, ['name','country','background','people','needs','source','reviewed']) && !!String(value.name).trim() && (!value.source || safeUrl(String(value.source)));
   if (raw.cities !== undefined && (!Array.isArray(raw.cities) || !raw.cities.every(validCity))) throw new Error('Invalid saved city profiles in this backup.');
   const cities = raw.cities === undefined ? (city ? [city] : []) : raw.cities as CityProfile[];
-  return { reminders, testimonies, books, readingGroups, city, cities };
+  const followedCities=raw.followedCities===undefined?[]:raw.followedCities;
+  if(!Array.isArray(followedCities)||!followedCities.every(id=>text(id)&&id.length>0)||new Set(followedCities).size!==followedCities.length)throw new Error('Invalid followed cities in this backup.');
+  const cityReviews=list<CityReview>('cityReviews',r=>strings(r,['reviewer','date','notes'])&&['draft','in-review','locally-reviewed'].includes(String(r.status))&&typeof r.sourceChecked==='boolean'&&typeof r.communityChecked==='boolean'&&(r.status!=='locally-reviewed'||!!String(r.reviewer).trim()&&validDate(r.date)&&r.sourceChecked===true&&r.communityChecked===true));
+  if(!testimonies.every(t=>(t.scripture===undefined||text(t.scripture))&&(t.topics===undefined||Array.isArray(t.topics)&&t.topics.every(text))))throw new Error('Invalid testimony topics or Scripture.');
+  if(!books.every(b=>(b.language===undefined||text(b.language))&&(b.bookmark===undefined||Number.isInteger(b.bookmark)&&b.bookmark>=0&&b.bookmark<=b.chapters)))throw new Error('Invalid book language or bookmark.');
+  const quietHours=raw.quietHours===undefined?{...emptyExtras.quietHours}:raw.quietHours;
+  if(!record(quietHours)||typeof quietHours.enabled!=='boolean'||!time(quietHours.start)||!time(quietHours.end)||quietHours.start===quietHours.end)throw new Error('Invalid quiet hours.');
+  return { reminders, testimonies, books, readingGroups, city, cities,followedCities,cityReviews,quietHours:quietHours as QuietHours };
 }
 
 export const cityLibrary: CityProfile[] = [
@@ -57,9 +67,12 @@ export function nextReminder(r: Reminder, after = new Date()): Date | null {
   const [endHour, endMinute] = r.endTime.split(':').map(Number);
   for (let offset = 0; offset < 9; offset++) {
     const day = new Date(after); day.setDate(day.getDate() + offset);
-    if (r.mode === 'Weekly' && !r.days.includes(day.getDay())) continue;
+    if (['Weekly','Custom'].includes(r.mode) && !r.days.includes(day.getDay())) continue;
     if (r.mode === 'Once' && localDate(day) !== r.date) continue;
-    for (let minutes = hour * 60 + minute; minutes <= (r.mode === 'Hourly' ? endHour * 60 + endMinute : hour * 60 + minute); minutes += 60) {
+    const candidates:number[]=[];
+    if(r.mode==='Custom')for(const time of r.times||[]){const[h,m]=time.split(':').map(Number);candidates.push(h*60+m);}
+    else for(let minutes=hour*60+minute;minutes<=(r.mode==='Hourly'?endHour*60+endMinute:hour*60+minute);minutes+=60)candidates.push(minutes);
+    for (const minutes of candidates.sort((a,b)=>a-b)) {
       const candidate = new Date(day); candidate.setHours(Math.floor(minutes / 60), minutes % 60, 0, 0);
       if (candidate.getTime() > after.getTime()) return candidate;
     }
@@ -77,6 +90,14 @@ function foldLine(line: string): string {
   return out;
 }
 export function reminderCalendar(reminder: Reminder, now = new Date()): string {
+  if(reminder.mode==='Custom'){
+    const events=(reminder.times||[]).map(time=>{
+      const calendar=reminderCalendar({...reminder,id:reminder.id+'-'+time.replace(':',''),mode:'Weekly',time,times:undefined},now);
+      return calendar.slice(calendar.indexOf('BEGIN:VEVENT'),calendar.indexOf('END:VCALENDAR')).trimEnd();
+    });
+    if(!events.length)throw new Error('Choose at least one custom time.');
+    return ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Prayer//Prayer reminders//EN','CALSCALE:GREGORIAN',...events,'END:VCALENDAR',''].join('\r\n');
+  }
   const r = { ...reminder, enabled: true, snoozedUntil: undefined };
   const next = nextReminder(r, now);
   if (!next) throw new Error('This reminder is in the past. Choose a future date.');
@@ -90,6 +111,10 @@ export function reminderCalendar(reminder: Reminder, now = new Date()): string {
     rule = `RRULE:FREQ=DAILY;BYHOUR=${hours.join(',')};BYMINUTE=${m};BYSECOND=0`;
   }
   return ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Prayer//Prayer reminders//EN','CALSCALE:GREGORIAN','BEGIN:VEVENT',`UID:${r.id}@prayer.local`,`DTSTAMP:${now.toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'')}`,`DTSTART:${localStamp(next)}`,`DTEND:${localStamp(end)}`,...(rule ? [rule] : []),'SUMMARY:Prayer time','DESCRIPTION:A quiet moment to pray. Open your Prayer app when you are ready.','BEGIN:VALARM','TRIGGER:PT0M','ACTION:DISPLAY','DESCRIPTION:Prayer time','END:VALARM','END:VEVENT','END:VCALENDAR'].map(foldLine).join('\r\n')+'\r\n';
+}
+export function inQuietHours(settings:QuietHours,date=new Date()){
+  if(!settings.enabled)return false;const current=String(date.getHours()).padStart(2,'0')+':'+String(date.getMinutes()).padStart(2,'0');
+  return settings.start<settings.end?current>=settings.start&&current<settings.end:current>=settings.start||current<settings.end;
 }
 
 export type ShareCard = { kind: 'prayer' | 'testimony' | 'reading'; title: string; text: string; praise: string };

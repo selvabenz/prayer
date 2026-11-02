@@ -8,6 +8,7 @@ import '@fontsource/noto-sans-tamil/400.css';
 import App from './App';
 import './style.css';
 import './features.css';
+import './places.css';
 
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
