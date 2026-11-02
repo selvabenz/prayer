@@ -44,7 +44,7 @@ Quiet hours in Prayer do not change calendar-exported events. Use your calendar�
 
 ## City prayer
 
-The four primary tabs are Today, My prayers, Places, and Community. Prayers links requests, answers, journal, and reminders; Community brings testimonies, books, and reading circles together. Places remains the direct home for city prayer.
+The four primary tabs are Today, My prayers, Pray for your city, and Community. Pray for your city occupies Journal’s former third position in both the sidebar and mobile navigation. Journal remains in the secondary menu. Prayers links requests, answers, journal, and reminders; Community brings testimonies, books, and reading circles together.
 
 Choose any city manually, or select **Find my city**. Before detection, a consent panel explains that the browser will request location and that coordinates rounded to two decimal places will be sent to [BigDataCloud](https://www.bigdatacloud.com/docs/free-api/free-reverse-geocode-to-city-api). The provider receives the request and IP address. Coordinates are discarded; only the chosen city and user-written notes are saved.
 
@@ -104,7 +104,9 @@ Records are stored in this browser’s IndexedDB. **They are not encrypted.** So
 
 Backup export/restore includes prayers, journals, sessions, reminders and quiet hours, testimonies, active and saved cities, followed cities, local research reviews, books, and reading plans. Original backups migrate without losing their records. New exports use backup format v2 to prevent older app releases from accepting and silently discarding the new fields; the current app accepts v1 and v2. Fields are validated before restore, and restore asks before replacing local data. A failed initial storage read blocks writes; failed-save retries do not duplicate new prayers or journal entries.
 
-The production build generates a content-versioned offline shell containing all local assets, including fonts. The service worker caches built assets only, not personal records or external location responses. A new version waits until old tabs close. If an update remains pending, close all Prayer tabs and reopen. Offline use requires one successful online production visit.
+The production build generates a content-versioned offline shell containing all local assets, including fonts. The service worker caches built assets only, not personal records or external location responses. Updates activate after their assets are cached, even while old tabs are open. Online navigation fetches a fresh page and falls back to the cached shell offline. The app checks for updates at startup and when returning to it. An Update now button reloads an activated update; open editors and failed saves block this action to protect unfinished work. Saved IndexedDB records are never cleared by an app update. Offline use requires one successful online production visit.
+
+For a browser still running the original cache-first release, save any draft and use Ctrl+Shift+R once to load the updated app. Do not clear site data: that can remove device-only records.
 
 English/Tamil navigation and core prayer controls, dark mode, larger text, keyboard access, and reduced-motion preferences are supported. New feature prose and some controls remain English. An authorized Tamil Bible is not included.
 

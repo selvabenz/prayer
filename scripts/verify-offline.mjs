@@ -9,6 +9,8 @@ const cached = new Map();
 let precached = [];
 const deleted = [];
 let fetches = 0;
+let activatedImmediately = false;
+let online = false;
 const cache = {
   async addAll(urls) {
     precached = urls;
@@ -29,6 +31,7 @@ vm.runInNewContext(source, {
     location: { origin: 'https://example.test' },
     registration: { scope: 'https://example.test/prayer/' },
     clients: { claim: async () => {} },
+    skipWaiting: async () => {activatedImmediately=true;},
     addEventListener(type, handler) { handlers[type] = handler; },
   },
   caches: {
@@ -37,11 +40,12 @@ vm.runInNewContext(source, {
     delete: async name => { deleted.push(name); },
   },
   URL,
-  fetch: async () => { fetches++; throw new Error('Offline'); },
+  fetch: async () => { fetches++; if(online)return new Response('fresh app shell'); throw new Error('Offline'); },
 });
 let pending;
 handlers.install({ waitUntil(promise) { pending = promise; } });
 await pending;
+assert.equal(activatedImmediately,true,'Do not strand an update while old app tabs remain open');
 assert(precached.includes('./index.html'));
 assert(precached.includes('./manifest.webmanifest'));
 assert(precached.includes('./icon-192.png'));
@@ -54,7 +58,10 @@ assert((await (await pending).text()).includes('<div id="root">'), 'Return the s
 const asset = precached.find(url => url.endsWith('.js'));
 handlers.fetch({ request: { method: 'GET', url: new URL(asset, 'https://example.test/prayer/').href }, respondWith(promise) { pending = promise; } });
 assert.equal((await pending).status, 200);
-assert.equal(fetches, 0, 'The app shell must not require the network');
+assert.equal(fetches, 1, 'Only navigation checks the network; offline assets stay cached');
+online=true;
+handlers.fetch({request:{method:'GET',url:'https://example.test/prayer/',mode:'navigate'},respondWith(promise){pending=promise;}});
+assert.equal(await (await pending).text(),'fresh app shell','A normal online refresh must not return a stale cached app');
 let intercepted = false;
 handlers.fetch({ request: { method: 'POST', url: 'https://example.test/prayer/private' }, respondWith() { intercepted = true; } });
 handlers.fetch({ request: { method: 'GET', url: 'https://other.example/private' }, respondWith() { intercepted = true; } });

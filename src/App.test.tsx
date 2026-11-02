@@ -1,11 +1,12 @@
 // @vitest-environment jsdom
 import 'fake-indexeddb/auto';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
+import { act, cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import App from './App';
 import { initial, readData, writeData } from './data';
 import * as storage from './data';
+import * as updates from './app-update';
 
 beforeEach(async () => {
   vi.restoreAllMocks();
@@ -22,6 +23,24 @@ async function openApp() {
 }
 
 describe('personal prayer experience', () => {
+  it('blocks updating while a journal draft is open and preserves its words', async () => {
+    const user=userEvent.setup();const reload=vi.spyOn(updates,'reloadUpdatedApp').mockImplementation(()=>{});
+    await openApp();
+    act(()=>window.dispatchEvent(new Event('prayer-update')));
+    await user.click(screen.getByRole('button',{name:'Write a reflection'}));
+    await user.type(screen.getByLabelText('Your reflection'),'Keep this unsaved reflection');
+    await user.click(screen.getByRole('button',{name:'Update now',hidden:true}));
+    expect(reload).not.toHaveBeenCalled();
+    expect((screen.getByLabelText('Your reflection')as HTMLTextAreaElement).value).toBe('Keep this unsaved reflection');
+    expect(screen.getByText('Save your entry and leave the editor before updating.')).toBeTruthy();
+  });
+  it('offers a direct update action when no editor is open',async()=>{
+    const user=userEvent.setup();const reload=vi.spyOn(updates,'reloadUpdatedApp').mockImplementation(()=>{});
+    await openApp();act(()=>window.dispatchEvent(new Event('prayer-update')));
+    await user.click(screen.getByRole('button',{name:'Update now'}));
+    await waitFor(()=>expect(reload).toHaveBeenCalledOnce());
+    expect((await readData()).prayers).toEqual([]);
+  });
   it('retries a failed save without duplicating the new prayer', async () => {
     const user = userEvent.setup();
     await openApp();

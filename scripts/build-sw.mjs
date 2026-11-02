@@ -17,7 +17,10 @@ const sw = `// Generated from the production build. Personal records are never s
 const CACHE = 'prayer-shell-${version}';
 const ASSETS = ${JSON.stringify(urls)};
 self.addEventListener('install', event => {
-  event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS)));
+  event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS)).then(() => self.skipWaiting()));
+});
+self.addEventListener('message', event => {
+  if (event.data?.type === 'SKIP_WAITING') event.waitUntil(self.skipWaiting());
 });
 self.addEventListener('activate', event => {
   event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key.startsWith('prayer-shell-') && key !== CACHE).map(key => caches.delete(key)))).then(() => self.clients.claim()));
@@ -25,12 +28,16 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET' || new URL(event.request.url).origin !== self.location.origin) return;
   event.respondWith(caches.open(CACHE).then(async cache => {
-    const cached = await cache.match(event.request, { ignoreSearch: true });
-    if (cached) return cached;
     if (event.request.mode === 'navigate') {
+      try {
+        const fresh = await fetch(event.request, {cache:'no-store'});
+        if (fresh.ok) return fresh;
+      } catch { /* The precached shell remains available offline. */ }
       const shell = await cache.match(new URL('./index.html', self.registration.scope).href);
       if (shell) return shell;
     }
+    const cached = await cache.match(event.request, { ignoreSearch: true });
+    if (cached) return cached;
     return fetch(event.request);
   }));
 });

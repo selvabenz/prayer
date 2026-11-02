@@ -13,9 +13,12 @@ describe('Places and integrated navigation',()=>{
   it('searches 42 city research starters, follows Delhi, and opens a guided prayer',async()=>{
     const user=userEvent.setup();await open();
     const mobile=screen.getByRole('navigation',{name:'Mobile navigation'});
-    expect(within(mobile).getByRole('button',{name:'Places'})).toBeTruthy();
+    expect(within(mobile).getAllByRole('button')[2].textContent).toBe('Pray for your city');
+    expect(within(mobile).queryByRole('button',{name:'Journal'})).toBeNull();
+    expect(within(screen.getByRole('navigation',{name:'Main navigation'})).getAllByRole('button')[2].textContent).toBe('Pray for your city');
+    expect(within(mobile).getByRole('button',{name:'Pray for your city'})).toBeTruthy();
     expect(within(mobile).getByRole('button',{name:'Community'})).toBeTruthy();
-    await user.click(within(mobile).getByRole('button',{name:'Places'}));
+    await user.click(within(mobile).getByRole('button',{name:'Pray for your city'}));
     await user.type(screen.getByRole('textbox',{name:'Search city research'}),'Delhi');
     await user.click(screen.getByRole('button',{name:'Follow Delhi'}));
     await waitFor(async()=>expect((await readData()).followedCities).toEqual(['delhi']));
